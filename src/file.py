@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 
 
+
 # read data in python
 data1 = pd.read_csv(r"C://Users//44754\Downloads//newdoc//btcusd.csv")
 # to see first 5 rows
