@@ -1,6 +1,7 @@
 #importing pandas libraries and numpy
 import pandas as pd
 import numpy as np
+pip install fsspec
 
 
 # read data in python
