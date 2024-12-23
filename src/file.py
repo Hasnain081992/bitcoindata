@@ -84,6 +84,7 @@ try:
 except Exception as e:
     print("Failed to connect to the PostgreSQL database!")
     print(e)
+    #ok
 
 
     # Export the DataFrame to PostgreSQL using SQLAlchemy
