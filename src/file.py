@@ -1,7 +1,7 @@
 #importing pandas libraries and numpy
 import pandas as pd
 import numpy as np
-from sqlalchemy import create_engine
+
 
 # read data in python
 data1 = pd.read_csv(r"C:\Users\44754\Downloads\newdoc\btcusd.csv")
