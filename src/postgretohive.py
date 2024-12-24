@@ -9,7 +9,7 @@ df.printSchema()
 # Add year and month columns for partitioning
 df_with_partition_cols = df.withColumn("year", year(col("Datetime"))) .withColumn("month", month(col("Datetime")))
 # Write data to Hive table with partitioning by year and month
-df_with_partition_cols.repartition("year","month".write .mode("overwrite") .partitionBy("year", "month") .saveAsTable("project2024.hasan_bitcoin")
+df_with_partition_cols.repartition("year","month").write .mode("overwrite") .partitionBy("year", "month") .saveAsTable("project2024.hasan_bitcoin")
 
 #df.write.mode("overwrite").saveAsTable("project2024.hasan_bitcoin")
 print("Successfully Load to Hive")
