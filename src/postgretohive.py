@@ -10,7 +10,7 @@ df = spark.read.format("jdbc") .option("url", "jdbc:postgresql://18.132.73.146:5
 # Print schema to verify structure
 df.printSchema()
 
-df.write.mode("overwrite").saveAsTable("project2024.hasancoin")
+df.write.mode("overwrite").saveAsTable("project2024.teamcoin")
 print("Successfully Load to Hive")
 
 
