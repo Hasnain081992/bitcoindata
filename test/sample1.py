@@ -1,58 +1,54 @@
-import pandas as pd
-pip install pytest
 import pytest
+import pandas as pd
+from your_module import read_data, preprocess_data  # Adjust import based on your actual file name
 
-# Fixture to load the actual btcusd.csv file
+# Sample file path (adjust the path as needed)
+test_file = r"C://Users//44754\Downloads//newdoc//btcusd.csv"
+
+# Fixture to create sample data
 @pytest.fixture
-def btcusd_data():
-    file_path = r"C:\Users\44754\Downloads\btcusd.csv"
-    return pd.read_csv(file_path)
+def sample_data():
+    return pd.read_csv(test_file)
 
-# Test for Timestamp conversion to Datetime
-def test_convert_timestamp_to_datetime(btcusd_data):
-    btcusd_data['Datetime'] = pd.to_datetime(btcusd_data['Timestamp'], unit='s')
-    assert btcusd_data['Datetime'].dtype == "datetime64[ns]"
+def test_timestamp_conversion(sample_data):
+    """Test if the 'Timestamp' column is correctly converted to a 'Datetime' column."""
+    data = preprocess_data(sample_data)
+    assert 'Datetime' in data.columns  # Ensure 'Datetime' column exists
+    assert pd.api.types.is_datetime64_any_dtype(data['Datetime'])  # Ensure the type is datetime
 
-# Test for filling missing values
-def test_fill_missing_values(btcusd_data):
-    btcusd_data.fillna(method='ffill', inplace=True)
-    assert not btcusd_data.isnull().any().any()  # Ensure no missing values remain
+def test_fillna(sample_data):
+    """Test if missing values are correctly filled."""
+    # Set NaN values in 'Close' column for testing purposes
+    sample_data.loc[1, 'Close'] = np.nan
+    data = preprocess_data(sample_data)
+    assert not data['Close'].isnull().any()  # Ensure there are no missing values
 
-# Test for Price Range calculation
-def test_price_range(btcusd_data):
-    btcusd_data['Price_Range'] = btcusd_data['High'] - btcusd_data['Low']
-    assert (btcusd_data['Price_Range'] >= 0).all()  # High must always be >= Low
+def test_price_range(sample_data):
+    """Test if the price range is calculated correctly."""
+    data = preprocess_data(sample_data)
+    expected_price_range = sample_data['High'] - sample_data['Low']
+    assert all(data['Price_Range'] == expected_price_range)
 
-# Test for Moving Average calculation
-def test_moving_average(btcusd_data):
-    btcusd_data['MA_Close_10'] = btcusd_data['Close'].rolling(window=10).mean()
-    # Ensure the moving average column exists and has NaN values for the initial rows
-    assert 'MA_Close_10' in btcusd_data.columns
-    assert btcusd_data['MA_Close_10'].isna().sum() == 9  # First 9 rows should be NaN
+def test_moving_averages(sample_data):
+    """Test if the moving averages are calculated."""
+    data = preprocess_data(sample_data)
+    # Check the first row's moving averages
+    assert data['MA_Close_10'].iloc[0] == pytest.approx(sample_data['Close'][:10].mean(), rel=1e-2)
+    assert data['MA_Close_30'].iloc[0] == pytest.approx(sample_data['Close'][:30].mean(), rel=1e-2)
 
-# Test for Daily Return calculation
-def test_daily_return(btcusd_data):
-    btcusd_data['Daily_Return'] = btcusd_data['Close'].pct_change() * 100
-    # Check that the first row is NaN since pct_change can't calculate it
-    assert pd.isna(btcusd_data['Daily_Return'].iloc[0])
+def test_daily_return(sample_data):
+    """Test if daily return is calculated correctly."""
+    data = preprocess_data(sample_data)
+    expected_daily_return = sample_data['Close'].pct_change() * 100
+    assert all(data['Daily_Return'] == expected_daily_return)
 
-# Test for Close Increase Indicator
-def test_close_increased(btcusd_data):
-    btcusd_data['Close_Increased'] = (btcusd_data['Close'].diff() > 0).astype(int)
-    # Ensure the column exists and has only 0 or 1 values
-    assert 'Close_Increased' in btcusd_data.columns
-    assert set(btcusd_data['Close_Increased'].unique()).issubset({0, 1})
+def test_close_increased(sample_data):
+    """Test if Close_Increased column is correctly set to 1 or 0."""
+    data = preprocess_data(sample_data)
+    assert all(data['Close_Increased'] == (sample_data['Close'].diff() > 0).astype(int))
 
-# Test for Cumulative Volume calculation
-def test_cumulative_volume(btcusd_data):
-    btcusd_data['Cumulative_Volume'] = btcusd_data['Volume'].cumsum()
-    # Ensure the cumulative volume is non-decreasing
-    assert (btcusd_data['Cumulative_Volume'].diff() >= 0).all()
-
-# Test for Resampling
-def test_resample_daily_mean(btcusd_data):
-    btcusd_data['Datetime'] = pd.to_datetime(btcusd_data['Timestamp'], unit='s')
-    btcusd_data.set_index('Datetime', inplace=True)
-    daily_data = btcusd_data['Close'].resample('D').mean()
-    # Ensure resampling produces a valid series with mean calculations
-    assert daily_data.notnull().all() or daily_data.isnull().all()
+def test_cumulative_volume(sample_data):
+    """Test if the cumulative volume is calculated correctly."""
+    data = preprocess_data(sample_data)
+    expected_cumulative_volume = sample_data['Volume'].cumsum()
+    assert all(data['Cumulative_Volume'] == expected_cumulative_volume)
