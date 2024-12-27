@@ -1,4 +1,5 @@
 import pandas as pd
+pip install pytest
 import pytest
 
 # Fixture to load the actual btcusd.csv file
