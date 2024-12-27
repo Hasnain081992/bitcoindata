@@ -1,11 +1,12 @@
 
 fullload from postgre to hive
+
+ssh -i "test_key.pem" ec2-user@18.134.132.202
 sqoop list-databases --connect jdbc:postgresql://18.132.73.146:5432/testdb --username consultants -P
 
 sqoop list-tables --connect jdbc:postgresql://18.132.73.146:5432/testdb --username consultants -P
 
-sqoop import --connect jdbc:postgresql://18.132.73.146:5432/testdb --username consultants --password WelcomeItc@2022 --table bitcoin_2025 --m 1 --target-dir /tmp/bigdata_nov_2024/project2024/postgre       ---------EXPORTING DATA
-
+sqoop import --connect jdbc:postgresql://18.132.73.146:5432/testdb --username consultants --password WelcomeItc@2022 --table bitcoin_2025 --m 1 --target-dir /tmp/bigdata_nov_2024/project2024/postgre 
 
 
 CREATE EXTERNAL TABLE project2024.bitcoi2025 (
