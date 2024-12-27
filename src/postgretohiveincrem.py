@@ -24,7 +24,7 @@ try:
     more_data.show()
 
     # Step 4: Write the incremental data to Hive (append mode)
-    more_data.write.mode("append").saveAsTable("bigdata_nov_2024.hasan_person")
+    more_data.write.mode("append").saveAsTable("project2024.hasan_person1")
     print("Incremental load based on Cumulative_Volume completed successfully.")
 
 except Exception as e:
