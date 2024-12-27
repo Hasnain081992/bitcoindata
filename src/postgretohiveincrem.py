@@ -1,35 +1,35 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 
-# Initialize SparkSession
-spark = SparkSession.builder.master("local").appName("IncrementalCumulativeVolumeLoad").enableHiveSupport().getOrCreate()
+# Initialize Spark session
+spark = SparkSession.builder.master("local").appName("Incrementalload").enableHiveSupport().getOrCreate()
 
-try:
-    # Step 1: Set the last Cumulative_Volume value
-    last_cumulative_volume = 36805902.179584436
+# Step 1: Set the last Cumulative_Volume value manually (this can be dynamic in your production environment)
+last_Cumulative_Volume = 36805900.826118246
+print("Max Cumulative_Volume: {}".format(last_Cumulative_Volume))  # Print the last Cumulative_Volume value
 
-    # Step 2: Load new data from PostgreSQL where Cumulative_Volume > last_cumulative_volume
-    query = f'SELECT * FROM bitcoin_2025 WHERE "Cumulative_Volume" > {last_cumulative_volume}'
+# Step 2: Build the query to get data from PostgreSQL where Cumulative_Volume > last Cumulative_Volume
+query = "SELECT * FROM bitcoin_2025 WHERE \"Cumulative_Volume\" > {}".format(last_Cumulative_Volume)
 
-    more_data = spark.read.format("jdbc") \
-        .option("url", "jdbc:postgresql://18.132.73.146:5432/testdb") \
-        .option("driver", "org.postgresql.Driver") \
-        .option("query", query) \
-        .option("user", "consultants") \
-        .option("password", "WelcomeItc@2022") \
-        .load()
+# Step 3: Read data from PostgreSQL using the query
+new_data = spark.read.format("jdbc") \
+    .option("url", "jdbc:postgresql://18.132.73.146:5432/testdb") \
+    .option("driver", "org.postgresql.Driver") \
+    .option("user", "consultants") \
+    .option("password", "WelcomeItc@2022") \
+    .option("query", query) \
+    .load()
 
-    # Step 3: Display the newly loaded data
-    print("Newly Loaded Data:")
-    more_data.show()
+# Show the new data that was loaded
+new_data.show()
 
-    # Step 4: Write the incremental data to Hive (append mode)
-    more_data.write.mode("append").saveAsTable("project2024.hasan_person1")
-    print("Incremental load based on Cumulative_Volume completed successfully.")
+# Step 4: Write the new data to Hive
+new_data.write.mode("append").saveAsTable("project2024.bitcoin_inc_team")
 
-except Exception as e:
-    print(f"Error during incremental load: {e}")
+print("Successfully loaded data into Hive")
 
-finally:
-    # Stop the SparkSession
-    spark.stop()
+# Optionally: Check for further transformations or actions
+# For example, if you want to join with other data, you can do so as follows:
+# df2 = spark.read.csv("path/to/other_file.csv", header=True, inferSchema=True)
+# joined_df = new_data.join(df2, on=["ID"], how="inner")
+# joined_df.show()
