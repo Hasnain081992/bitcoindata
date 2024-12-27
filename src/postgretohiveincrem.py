@@ -1,45 +1,35 @@
-from pyspark.sql import *
+from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
-from pyspark.sql import functions as F
 
-spark = SparkSession.builder.master("local").appName("Incrementalload").enableHiveSupport().getOrCreate()
-#max_id = spark.sql("SELECT max(id) FROM bigdata_nov_2024.hasan_person")
-#m_id = max_id.collect()[0][0]
-#str(m_id)
+# Initialize SparkSession
+spark = SparkSession.builder.master("local").appName("IncrementalCumulativeVolumeLoad").enableHiveSupport().getOrCreate()
 
-# Step 1: Set the last Cumulative_Volume value manually
-last_Cumulative_Volume = 36805900.826118246
-print("Max Cumulative_Volume: {}".format(last_Cumulative_Volume))  # Using format() for compatibility
+try:
+    # Step 1: Set the last Cumulative_Volume value
+    last_cumulative_volume = 36805902.179584436
 
-# Step 2: Build the query to get data from PostgreSQL where Cumulative_Volume > last Cumulative_Volume
-query = "SELECT * FROM bitcoin_2025 WHERE Cumulative_Volume > {}".format(last_Cumulative_Volume)
+    # Step 2: Load new data from PostgreSQL where Cumulative_Volume > last_cumulative_volume
+    query = f'SELECT * FROM bitcoin_2025 WHERE "Cumulative_Volume" > {last_cumulative_volume}'
 
+    more_data = spark.read.format("jdbc") \
+        .option("url", "jdbc:postgresql://18.132.73.146:5432/testdb") \
+        .option("driver", "org.postgresql.Driver") \
+        .option("query", query) \
+        .option("user", "consultants") \
+        .option("password", "WelcomeItc@2022") \
+        .load()
 
+    # Step 3: Display the newly loaded data
+    print("Newly Loaded Data:")
+    more_data.show()
 
-# Step 2: Build the query to get data from PostgreSQL where Cumulative_Volume > latest value
-#query = f"SELECT * FROM bitcoin_2025 WHERE Cumulative_Volume > {cumulative_volume_value}"
-#query = 'SELECT * FROM person WHERE id > ' + str(m_id)
+    # Step 4: Write the incremental data to Hive (append mode)
+    more_data.write.mode("append").saveAsTable("bigdata_nov_2024.hasan_person")
+    print("Incremental load based on Cumulative_Volume completed successfully.")
 
-new_data = spark.read.format("jdbc") \
-    .option("url", "jdbc:postgresql://18.132.73.146:5432/testdb") \
-    .option("driver", "org.postgresql.Driver") \
-    .option("user", "consultants") \
-    .option("password", "WelcomeItc@2022") \
-    .option("query", query) \
-    .load()
+except Exception as e:
+    print(f"Error during incremental load: {e}")
 
-
-
-# Sort the DataFrame by ID
-new_data.show()
-new_data.write.mode("append").saveAsTable("project2024.hasan_bitcoi")
-print("Successfully Load to Hive")
-
-# spark-submit --master local[*] --jars /var/lib/jenkins/workspace/nagaranipysparkdryrun/lib/postgresql-42.5.3.jar src/IncreamentalLoadPostgressToHive.py
-
-# df2 = spark.read.csv("path/to/other_file.csv", header=True, inferSchema=True)
-# joined_df = df.join(df2, on=["ID"], how="inner")
-
-# df1.write.mode("overwrite").saveAsTable("product.dummy")
-# hadoop fs -chmod -R 775 /warehouse/tablespace/external/hive/product.db/emp_info
-# sudo -u hdfs hdfs dfs -chmod -R 777 /warehouse/tablespace/external/hive/product.db
+finally:
+    # Stop the SparkSession
+    spark.stop()
