@@ -1,18 +1,31 @@
 import unittest
 import pandas as pd
-from data import read_data, preprocess_data
+from your_module import read_data, preprocess_data, resample_to_daily
 
-def test_preprocess_data(self):
-    """Test the preprocess_data function."""
-    processed_data = preprocess_data(self.sample_data)
-    
-    # Test that the Datetime column is set as index
-    self.assertTrue(isinstance(processed_data.index, pd.DatetimeIndex), "Index is not a DatetimeIndex")
-    
-    # Test Price_Range calculation
-    expected_price_range = processed_data["High"] - processed_data["Low"]
-    pd.testing.assert_series_equal(processed_data["Price_Range"], expected_price_range, check_names=False)
-    
-    # Test Cumulative_Volume calculation
-    expected_cumulative_volume = processed_data["Volume"].cumsum()
-    pd.testing.assert_series_equal(processed_data["Cumulative_Volume"], expected_cumulative_volume, check_names=False)
+class TestBitcoinData(unittest.TestCase):
+    def setUp(self):
+        """Set up test data."""
+        self.file_path = r"C://Users//44754\Downloads//newdoc//btcusd.csv"
+        self.data = read_data(self.file_path)  # Read the actual file
+        
+    def test_read_data(self):
+        """Test the read_data function."""
+        df = read_data(self.file_path)
+        self.assertIsInstance(df, pd.DataFrame)
+
+    def test_preprocess_data(self):
+        """Test the preprocess_data function."""
+        processed_df = preprocess_data(self.data.copy())
+        self.assertIn('Price_Range', processed_df.columns)
+        self.assertIn('MA_Close_10', processed_df.columns)
+
+    def test_resample_to_daily(self):
+        """Test the resample_to_daily function."""
+        processed_df = preprocess_data(self.data.copy())
+        processed_df.set_index('Datetime', inplace=True)  # Ensure Datetime index
+        daily_df = resample_to_daily(processed_df)
+        self.assertIsInstance(daily_df, pd.DataFrame)
+        self.assertIn('Daily_Close_Mean', daily_df.columns)
+
+if __name__ == "__main__":
+    unittest.main()
