@@ -59,5 +59,5 @@ def test_incremental_load(mock_load, mock_option, mock_format, mock_saveAsTable,
     print("Test passed successfully.")
 
 
-if __name_ == "__main__":
+if __name__ == "__main__":
     pytest.main()
