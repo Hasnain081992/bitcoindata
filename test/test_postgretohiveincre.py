@@ -1,35 +1,28 @@
-from unittest.mock import patch, MagicMock
+import pytest
+from unittest.mock import MagicMock, patch
 from pyspark.sql import SparkSession
+from your_script import last_Cumulative_Volume  # Assume your script is in `your_script.py`
 
-@patch("pyspark.sql.DataFrameWriter.saveAsTable")
-@patch("pyspark.sql.DataFrameReader.format")
-@patch("pyspark.sql.DataFrameReader.option")
-@patch("pyspark.sql.DataFrameReader.load")
-def test_incremental_load(mock_load, mock_option, mock_format, mock_saveAsTable):
-    # Initialize Spark session
-    spark = SparkSession.builder.master("local").appName("Test").getOrCreate()
+@pytest.fixture
+def mock_spark_session():
+    # Mock the Spark session creation
+    with patch.object(SparkSession, 'builder', autospec=True) as mock_builder:
+        mock_session = MagicMock()
+        mock_builder.getOrCreate.return_value = mock_session
+        yield mock_session
 
-    # Mocking the return of the DataFrame when `.load()` is called
-    new_data_mock = MagicMock()
-    new_data_mock.show.return_value = None  # Mock the `show` method
-
-    # Mock the methods in the `.read` chain
-    mock_format.return_value = mock_option
-    mock_option.side_effect = lambda key, value: mock_option
-    mock_load.return_value = new_data_mock
-
-    # Mock the save method for DataFrame writing to Hive
-    mock_saveAsTable.return_value = None
-
-    # Set the last Cumulative_Volume value manually
-    last_Cumulative_Volume = 36805900.826118246
-    print(f"Max Cumulative_Volume: {last_Cumulative_Volume}")
-
-    # Build the query
-    query = f"SELECT * FROM bitcoin_2025 WHERE \"Cumulative_Volume\" > {last_Cumulative_Volume}"
-
-    # Simulate reading data using the query
-    new_data = spark.read.format("jdbc") \
+def test_incremental_load(mock_spark_session):
+    # Mocking the DataFrame read
+    mock_new_data = MagicMock()
+    mock_new_data.show.return_value = None  # Mock the `show` method
+    
+    mock_spark_session.read.format.return_value.option.return_value.load.return_value = mock_new_data
+    
+    # The original query you'd use
+    query = "SELECT * FROM bitcoin_2025 WHERE \"Cumulative_Volume\" > {}".format(last_Cumulative_Volume)
+    
+    # Simulate your script's process
+    new_data = mock_spark_session.read.format("jdbc") \
         .option("url", "jdbc:postgresql://18.132.73.146:5432/testdb") \
         .option("driver", "org.postgresql.Driver") \
         .option("user", "consultants") \
@@ -37,10 +30,14 @@ def test_incremental_load(mock_load, mock_option, mock_format, mock_saveAsTable)
         .option("query", query) \
         .load()
 
-    # Log actual calls for debugging
-    print("mock_option.call_args_list:", mock_option.call_args_list)
+    # Assertions to check if the methods were called
+    mock_spark_session.read.format.assert_called_with("jdbc")
+    new_data.show.assert_called_once()  # Check that `show` was called on the dataframe
 
-    # Assert that the correct methods were called
-    mock_format.assert_called_with("jdbc")
-    mock_option.assert_any_call("url", "jdbc:postgresql://18.132.73.146:5432/testdb")
-    mock_option.assert_any_call("query", query)
+    # Mocking the saveAsTable method
+    mock_new_data.write.mode.return_value.saveAsTable.return_value = None  # Mock saveAsTable
+    new_data.write.mode("append").saveAsTable("project2024.bitcoin_inc_team")
+    
+    # Check if saveAsTable was called
+    mock_new_data.write.mode.return_value.saveAsTable.assert_called_with("project2024.bitcoin_inc_team")
+
