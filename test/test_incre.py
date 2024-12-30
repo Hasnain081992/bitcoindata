@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import MagicMock, patch
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
 import pandas as pd
+from pyspark.sql import Row
 
 class TestIncrementalLoad(unittest.TestCase):
     
@@ -46,7 +46,7 @@ class TestIncrementalLoad(unittest.TestCase):
         
         # Check if the data matches the expected Cumulative_Volume
         last_Cumulative_Volume = 36805900.826118246
-        self.assertTrue(all(new_data.filter(col("Cumulative_Volume") > last_Cumulative_Volume).count() == 2))
+        self.assertTrue(all(new_data.filter("Cumulative_Volume > {}".format(last_Cumulative_Volume)).count() == 2))
 
         # Simulate writing the new data to Hive
         new_data.write.mode("append").saveAsTable("project2024.bitcoin_inc_team")
@@ -56,7 +56,7 @@ class TestIncrementalLoad(unittest.TestCase):
 
         # Optionally, test additional assertions such as transformations on data if applied
         # Example: Check if a column transformation (like creating a new column) works correctly
-        transformed_data = new_data.withColumn("Price_Range", col("High") - col("Low"))
+        transformed_data = new_data.withColumn("Price_Range", new_data["High"] - new_data["Low"])
         self.assertTrue("Price_Range" in transformed_data.columns)
     
     def tearDown(self):
