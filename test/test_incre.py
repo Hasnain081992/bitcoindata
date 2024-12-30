@@ -1,67 +1,38 @@
-import unittest
-from unittest.mock import MagicMock, patch
+import pytest
 from pyspark.sql import SparkSession
-import pandas as pd
-from pyspark.sql import Row
 
-class TestIncrementalLoad(unittest.TestCase):
-    
-    def setUp(self):
-        # Initialize Spark session mock
-        self.spark = SparkSession.builder.master("local").appName("Incrementalload").enableHiveSupport().getOrCreate()
+@pytest.fixture(scope="session")
+def spark():
+    # Initialize Spark session
+    spark = SparkSession.builder.master("local").appName("Incrementalload").enableHiveSupport().getOrCreate()
+    yield spark
+    spark.stop()
 
-        # Define the sample data for new_data DataFrame
-        self.new_data_df = pd.DataFrame({
-            "Timestamp": [1609459200, 1609545600],
-            "High": [30000, 30500],
-            "Low": [29500, 30000],
-            "Close": [29800, 30200],
-            "Volume": [1000, 1100],
-            "Cumulative_Volume": [36806000, 36807000]
-        })
-        
-        # Create a mock DataFrame to simulate the new data loaded from PostgreSQL
-        self.mock_new_data = self.spark.createDataFrame(self.new_data_df)
-    
-    @patch("pyspark.sql.DataFrameWriter.saveAsTable")
-    @patch("pyspark.sql.DataFrameReader.format")
-    @patch("pyspark.sql.DataFrameReader.option")
-    @patch("pyspark.sql.DataFrameReader.load")
-    def test_incremental_load(self, mock_load, mock_option, mock_format, mock_saveAsTable):
-        # Simulate the loading of data from PostgreSQL by mocking `load`
-        mock_load.return_value = self.mock_new_data
-        
-        # Simulate reading data from PostgreSQL
-        query = "SELECT * FROM bitcoin_2025 WHERE \"Cumulative_Volume\" > 36805900.826118246"
-        new_data = self.spark.read.format("jdbc") \
-            .option("url", "jdbc:postgresql://18.132.73.146:5432/testdb") \
-            .option("driver", "org.postgresql.Driver") \
-            .option("user", "consultants") \
-            .option("password", "WelcomeItc@2022") \
-            .option("query", query) \
-            .load()
+def test_incremental_load(spark):
+    last_Cumulative_Volume = 36805900.826118246
 
-        # Check if the data was loaded correctly by verifying the DataFrame's row count
-        self.assertEqual(new_data.count(), 2)  # We mocked the data with 2 rows
-        
-        # Check if the data matches the expected Cumulative_Volume
-        last_Cumulative_Volume = 36805900.826118246
-        self.assertTrue(all(new_data.filter("Cumulative_Volume > {}".format(last_Cumulative_Volume)).count() == 2))
+    # Build the query to get data from PostgreSQL where Cumulative_Volume > last Cumulative_Volume
+    query = "SELECT * FROM bitcoin_2025 WHERE \"Cumulative_Volume\" > {}".format(last_Cumulative_Volume)
 
-        # Simulate writing the new data to Hive
-        new_data.write.mode("append").saveAsTable("project2024.bitcoin_inc_team")
+    # Read data from PostgreSQL using the query
+    new_data = spark.read.format("jdbc") \
+        .option("url", "jdbc:postgresql://18.132.73.146:5432/testdb") \
+        .option("driver", "org.postgresql.Driver") \
+        .option("user", "consultants") \
+        .option("password", "WelcomeItc@2022") \
+        .option("query", query) \
+        .load()
 
-        # Check if `saveAsTable` was called
-        mock_saveAsTable.assert_called_once_with("project2024.bitcoin_inc_team")
+    # Check if data was loaded
+    assert new_data.count() > 0, "No new data loaded!"
 
-        # Optionally, test additional assertions such as transformations on data if applied
-        # Example: Check if a column transformation (like creating a new column) works correctly
-        transformed_data = new_data.withColumn("Price_Range", new_data["High"] - new_data["Low"])
-        self.assertTrue("Price_Range" in transformed_data.columns)
-    
-    def tearDown(self):
-        # Clean up after each test
-        pass
+    # Optionally: Check for expected columns in the dataframe
+    expected_columns = ["column1", "column2", "Cumulative_Volume"]  # Update with actual column names
+    assert all(col in new_data.columns for col in expected_columns), "Missing expected columns"
 
-if __name__ == '__main__':
-    unittest.main()
+    # Optionally: Save data to Hive and check if it's saved
+    new_data.write.mode("append").saveAsTable("project2024.bitcoin_inc_team")
+
+    # Verify data is written into Hive (you can check the row count or sample data)
+    hive_data = spark.sql("SELECT * FROM project2024.bitcoin_inc_team LIMIT 10")
+    assert hive_data.count() > 0, "No data found in Hive table"
