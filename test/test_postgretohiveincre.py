@@ -1,63 +1,48 @@
 import pytest
-from unittest.mock import MagicMock, patch
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
 
-
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def spark():
-    """Fixture for initializing SparkSession."""
-    return SparkSession.builder.master("local").appName("Incrementalload").getOrCreate()
+    """Fixture to initialize SparkSession."""
+    return SparkSession.builder.master("local").appName("TestIncrementalLoad").getOrCreate()
 
+def test_spark_session(spark):
+    """Test if Spark session is initialized."""
+    assert spark is not None
+    assert spark.sparkContext is not None
 
-@patch("pyspark.sql.DataFrameWriter.saveAsTable")
-@patch("pyspark.sql.DataFrameReader.format")
-@patch("pyspark.sql.DataFrameReader.option")
-@patch("pyspark.sql.DataFrameReader.load")
-def test_incremental_load(mock_load, mock_option, mock_format, mock_saveAsTable, spark):
-    # Mocking the return of the DataFrame when `.load()` is called
-    new_data_mock = MagicMock()
-    new_data_mock.show.return_value = None  # Mock the `show` method
-
-    # Mock the methods in the `.read` chain
-    mock_format.return_value = mock_option
-    mock_option.return_value = mock_load
-    mock_load.return_value = new_data_mock
-    
-    # Mock the save method for DataFrame writing to Hive
-    mock_saveAsTable.return_value = None
-
-    # Set the last Cumulative_Volume value manually
+def test_query_generation():
+    """Test the query generation logic."""
     last_Cumulative_Volume = 36805900.826118246
-    print(f"Max Cumulative_Volume: {last_Cumulative_Volume}")
-
-    # Build the query
     query = f"SELECT * FROM bitcoin_2025 WHERE \"Cumulative_Volume\" > {last_Cumulative_Volume}"
+    expected_query = 'SELECT * FROM bitcoin_2025 WHERE "Cumulative_Volume" > 36805900.826118246'
+    assert query == expected_query
 
-    # Simulate reading data using the query
-    new_data = spark.read.format("jdbc") \
-        .option("url", "jdbc:postgresql://18.132.73.146:5432/testdb") \
-        .option("driver", "org.postgresql.Driver") \
-        .option("user", "consultants") \
-        .option("password", "WelcomeItc@2022") \
-        .option("query", query) \
-        .load()
+def test_incremental_load(spark):
+    """Test incremental data load logic."""
+    # Mock data for testing
+    mock_data = [
+        (1, "2024-01-01", 100, 200, 150, 1000, 36805901.0),
+        (2, "2024-01-02", 200, 300, 250, 2000, 36807000.0),
+    ]
+    columns = ["ID", "Date", "Low", "High", "Close", "Volume", "Cumulative_Volume"]
+    new_data = spark.createDataFrame(mock_data, columns)
 
-    # Assert that the correct methods were called
-    mock_format.assert_called_with("jdbc")
-    mock_option.assert_any_call("url", "jdbc:postgresql://18.132.73.146:5432/testdb")
-    mock_option.assert_any_call("driver", "org.postgresql.Driver")
-    mock_option.assert_any_call("user", "consultants")
-    mock_option.assert_any_call("password", "WelcomeItc@2022")
-    mock_option.assert_any_call("query", query)
-    mock_load.assert_called_once()
+    # Simulate the write to Hive (use temp view for testing)
+    new_data.createOrReplaceTempView("temp_bitcoin")
+    assert spark.sql("SELECT COUNT(*) FROM temp_bitcoin").collect()[0][0] == len(mock_data)
 
-    # Check that the data was "written" to Hive
-    new_data.write.mode("append").saveAsTable("project2024.bitcoin_inc_team")
-    mock_saveAsTable.assert_called_with("project2024.bitcoin_inc_team")
+def test_write_to_hive(spark):
+    """Test data write to Hive."""
+    mock_data = [
+        (1, "2024-01-01", 100, 200, 150, 1000, 36805901.0),
+    ]
+    columns = ["ID", "Date", "Low", "High", "Close", "Volume", "Cumulative_Volume"]
+    df = spark.createDataFrame(mock_data, columns)
 
-    print("Test passed successfully.")
+    # Write to Hive as a temporary table for testing
+    df.write.mode("overwrite").saveAsTable("test.bitcoin_test_table")
 
-
-if __name__ == "__main__":
-    pytest.main()
+    # Validate that the table exists and contains the expected data
+    loaded_data = spark.sql("SELECT * FROM test.bitcoin_test_table")
+    assert loaded_data.count() == len(mock_data)
