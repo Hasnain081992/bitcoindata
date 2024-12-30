@@ -1,3 +1,6 @@
+from unittest.mock import patch, MagicMock
+from pyspark.sql import SparkSession
+
 @patch("pyspark.sql.DataFrameWriter.saveAsTable")
 @patch("pyspark.sql.DataFrameReader.format")
 @patch("pyspark.sql.DataFrameReader.option")
