@@ -11,7 +11,7 @@ def read_data(filepath):
 def preprocess_data(data):
     """Performs preprocessing on the data."""
     data['Datetime'] = pd.to_datetime(data['Timestamp'], unit='s')
-    data.fillna(method='ffill', inplace=True)
+    data.ffill(inplace=True)  # Use ffill() instead of fillna with method='ffill'
     data['Price_Range'] = data['High'] - data['Low']
     data['MA_Close_10'] = data['Close'].rolling(window=10).mean()
     data['MA_Close_30'] = data['Close'].rolling(window=30).mean()
