@@ -1,6 +1,6 @@
 import unittest
 import pandas as pd
-from your_module import read_data, preprocess_data, resample_to_daily
+from data import read_data, preprocess_data, resample_to_daily
 
 class TestBitcoinData(unittest.TestCase):
     def setUp(self):
