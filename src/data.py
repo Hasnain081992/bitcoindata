@@ -12,6 +12,15 @@ data1.head(5)
 data1['Datetime'] = pd.to_datetime(data1['Timestamp'], unit = 's')
 print(data1['Datetime'])
 
+# Set 'Datetime' as the index
+data1.set_index('Datetime', inplace=True)
+
+# Resample data to daily frequency and calculate the mean Close price
+daily_data = data1['Close'].resample('D').mean().to_frame(name='Daily_Close_Mean')
+
+# Print to verify
+print(daily_data)
+
 #set datetime into index
 #data1.set_index('Datetime',inplace = False)
 #print(data1.set_index)
