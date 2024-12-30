@@ -5,7 +5,10 @@ from pyspark.sql import SparkSession
 @patch("pyspark.sql.DataFrameReader.format")
 @patch("pyspark.sql.DataFrameReader.option")
 @patch("pyspark.sql.DataFrameReader.load")
-def test_incremental_load(mock_load, mock_option, mock_format, mock_saveAsTable, spark):
+def test_incremental_load(mock_load, mock_option, mock_format, mock_saveAsTable):
+    # Initialize Spark session
+    spark = SparkSession.builder.master("local").appName("Test").getOrCreate()
+
     # Mocking the return of the DataFrame when `.load()` is called
     new_data_mock = MagicMock()
     new_data_mock.show.return_value = None  # Mock the `show` method
