@@ -3,7 +3,7 @@ from pyspark.sql import SparkSession
 
 spark = SparkSession.builder \
     .appName("Test") \
-    .config("spark.sql.warehouse.dir", "C:/path/to/valid/directory") \
+    .config("spark.sql.warehouse.dir", "C://Users//44754//Downloads//btcusd.csv") \
     .enableHiveSupport() \
     .getOrCreate()
 
