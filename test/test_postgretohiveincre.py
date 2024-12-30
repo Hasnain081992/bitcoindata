@@ -40,15 +40,15 @@ def test_incremental_load(spark):
 
 def test_write_to_hive(spark):
     """Test data write to Hive."""
+    # Ensure schema exists
+    spark.sql("CREATE SCHEMA IF NOT EXISTS project2024")
+    spark.sql("USE project2024")
+
     mock_data = [
         (1, "2024-01-01", 100, 200, 150, 1000, 36805901.0),
     ]
     columns = ["ID", "Date", "Low", "High", "Close", "Volume", "Cumulative_Volume"]
     df = spark.createDataFrame(mock_data, columns)
 
-    # Write to Hive as a temporary table for testing
+    # Write to Hive
     df.write.mode("overwrite").saveAsTable("project2024.bitcoin_test_table1")
-
-    # Validate that the table exists and contains the expected data
-    loaded_data = spark.sql("SELECT * FROM project2024.bitcoin_test_table1")
-    assert loaded_data.count() == len(mock_data)

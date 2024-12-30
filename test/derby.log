@@ -1,6 +1,6 @@
 ----------------------------------------------------------------
-Mon Dec 30 14:28:35 GMT 2024:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance a816c00e-0194-17f7-fc51-00000ca60da8 
+Mon Dec 30 14:32:58 GMT 2024:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance a816c00e-0194-17fb-ff47-000006714e00 
 on database directory C:\Users\44754\Downloads\bitcoindata\test\metastore_db with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@73d16e93 
 Loaded from file:/C:/app/spark-3.5.3-bin-hadoop3/jars/derby-10.14.2.0.jar
 java.vendor=Oracle Corporation
