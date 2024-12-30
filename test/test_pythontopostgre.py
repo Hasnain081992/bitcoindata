@@ -21,7 +21,7 @@ class TestBitcoinDataProcessing(unittest.TestCase):
     def test_fill_missing_values(self):
         # Introduce a missing value
         self.data1.loc[1, 'High'] = np.nan
-        self.data1.fillna(method='ffill', inplace=True)
+        self.data1.ffill(inplace=True)
         self.assertEqual(self.data1.loc[1, 'High'], 34000)
 
     def test_price_range_calculation(self):
