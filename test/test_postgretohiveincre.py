@@ -15,7 +15,7 @@ def test_incremental_load(mock_load, mock_option, mock_format, mock_saveAsTable)
 
     # Mock the methods in the `.read` chain
     mock_format.return_value = mock_option
-    mock_option.side_effect = lambda key, value: mock_load if key == "query" else mock_option
+    mock_option.side_effect = lambda key, value: mock_option
     mock_load.return_value = new_data_mock
 
     # Mock the save method for DataFrame writing to Hive
@@ -36,6 +36,9 @@ def test_incremental_load(mock_load, mock_option, mock_format, mock_saveAsTable)
         .option("password", "WelcomeItc@2022") \
         .option("query", query) \
         .load()
+
+    # Log actual calls for debugging
+    print("mock_option.call_args_list:", mock_option.call_args_list)
 
     # Assert that the correct methods were called
     mock_format.assert_called_with("jdbc")
