@@ -4,15 +4,7 @@ from data import read_data, preprocess_data
 
 class TestDataProcessing(unittest.TestCase):
 
-    def setUp(self):
-        """Set up a sample DataFrame for testing."""
-        self.sample_data = pd.DataFrame({
-            "Timestamp": [1609459200, 1609462800, 1609466400],
-            "High": [30000, 31000, 32000],
-            "Low": [29500, 30500, 31500],
-            "Close": [29800, 30800, 31800],
-            "Volume": [1.5, 2.0, 2.5],
-        })
+   
     
     def test_read_data(self):
         """Test the read_data function."""
