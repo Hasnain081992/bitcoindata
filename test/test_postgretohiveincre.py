@@ -1,6 +1,12 @@
 import pytest
 from pyspark.sql import SparkSession
 
+spark = SparkSession.builder \
+    .appName("Test") \
+    .config("spark.sql.warehouse.dir", "C:/path/to/valid/directory") \
+    .enableHiveSupport() \
+    .getOrCreate()
+
 @pytest.fixture(scope="module")
 def spark():
     """Fixture to initialize SparkSession."""
@@ -41,8 +47,8 @@ def test_write_to_hive(spark):
     df = spark.createDataFrame(mock_data, columns)
 
     # Write to Hive as a temporary table for testing
-    df.write.mode("overwrite").saveAsTable("test.bitcoin_test_table")
+    df.write.mode("overwrite").saveAsTable("test.bitcoin_test_table1")
 
     # Validate that the table exists and contains the expected data
-    loaded_data = spark.sql("SELECT * FROM test.bitcoin_test_table")
+    loaded_data = spark.sql("SELECT * FROM test.bitcoin_test_table1")
     assert loaded_data.count() == len(mock_data)
