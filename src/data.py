@@ -2,7 +2,27 @@
 import pandas as pd
 import numpy as np
 
+import pandas as pd
 
+def read_data(filepath):
+    """Reads the CSV file into a pandas DataFrame."""
+    return pd.read_csv(filepath)
+
+def preprocess_data(data):
+    """Performs preprocessing on the data."""
+    data['Datetime'] = pd.to_datetime(data['Timestamp'], unit='s')
+    data.fillna(method='ffill', inplace=True)
+    data['Price_Range'] = data['High'] - data['Low']
+    data['MA_Close_10'] = data['Close'].rolling(window=10).mean()
+    data['MA_Close_30'] = data['Close'].rolling(window=30).mean()
+    data['Daily_Return'] = data['Close'].pct_change() * 100
+    data['Close_Increased'] = (data['Close'].diff() > 0).astype(int)
+    data.set_index('Datetime', inplace=True)  # Ensure Datetime is set as the index
+    return data
+
+def resample_to_daily(data):
+    """Resamples the data to daily frequency and calculates the mean Close price."""
+    return data['Close'].resample('D').mean().to_frame(name='Daily_Close_Mean')
 
 # read data in python
 data1 = pd.read_csv(r"C://Users//44754\Downloads//newdoc//btcusd.csv")

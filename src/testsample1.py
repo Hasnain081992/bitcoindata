@@ -1,31 +1,25 @@
 import unittest
-import pandas as pd
 from data import read_data, preprocess_data, resample_to_daily
 
 class TestBitcoinData(unittest.TestCase):
-    def setUp(self):
-        """Set up test data."""
-        self.file_path = r"C://Users//44754\Downloads//newdoc//btcusd.csv"
-        self.data = read_data(self.file_path)  # Read the actual file
-        
     def test_read_data(self):
-        """Test the read_data function."""
-        df = read_data(self.file_path)
-        self.assertIsInstance(df, pd.DataFrame)
+        filepath = r"C://Users//44754\Downloads//newdoc//btcusd.csv"
+        data = read_data(filepath)
+        self.assertFalse(data.empty, "Data should not be empty")
 
     def test_preprocess_data(self):
-        """Test the preprocess_data function."""
-        processed_df = preprocess_data(self.data.copy())
-        self.assertIn('Price_Range', processed_df.columns)
-        self.assertIn('MA_Close_10', processed_df.columns)
+        filepath = r"C://Users//44754\Downloads//newdoc//btcusd.csv"
+        data = read_data(filepath)
+        processed_data = preprocess_data(data)
+        self.assertIn('Price_Range', processed_data.columns, "Price_Range column should exist")
+        self.assertIn('MA_Close_10', processed_data.columns, "MA_Close_10 column should exist")
 
     def test_resample_to_daily(self):
-        """Test the resample_to_daily function."""
-        processed_df = preprocess_data(self.data.copy())
-        processed_df.set_index('Datetime', inplace=True)  # Ensure Datetime index
-        daily_df = resample_to_daily(processed_df)
-        self.assertIsInstance(daily_df, pd.DataFrame)
-        self.assertIn('Daily_Close_Mean', daily_df.columns)
+        filepath = r"C://Users//44754\Downloads//newdoc//btcusd.csv"
+        data = read_data(filepath)
+        processed_data = preprocess_data(data)
+        daily_data = resample_to_daily(processed_data)
+        self.assertFalse(daily_data.empty, "Daily resampled data should not be empty")
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()
