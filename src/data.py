@@ -50,7 +50,8 @@ print(daily_data)
 #print(data1.drop)
 
     #Fill missing values with the forward-fill method
-data1.fillna(method='ffill', inplace=True)
+data1.ffill(inplace=True)
+
 print(data1.fillna)
 
 # Calculate the price range (High - Low) and add as a new column
