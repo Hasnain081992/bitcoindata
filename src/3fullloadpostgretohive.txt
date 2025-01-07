@@ -3,6 +3,7 @@ fullload from postgre to hive
 
 ssh -i "test_key.pem" ec2-user@18.134.132.202
 sqoop list-databases --connect jdbc:postgresql://18.132.73.146:5432/testdb --username consultants -P
+WelcomeItc@2022
 
 sqoop list-tables --connect jdbc:postgresql://18.132.73.146:5432/testdb --username consultants -P
 
