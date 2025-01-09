@@ -24,7 +24,7 @@ new_data = spark.read.format("jdbc") \
 new_data.show()
 
 # Step 4: Write the new data to Hive
-new_data.write.mode("append").saveAsTable("project2024.bitcoin_inc_team")
+new_data.write.mode("append").saveAsTable("project2024.bitcoin1_inc_team")
 
 print("Successfully loaded data into Hive")
 
