@@ -73,3 +73,6 @@ class TestBitcoinDataProcessing(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+# C:\Users\44754\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\Scripts\pytest.exe -v test_pythontopostgre.py
+# path for pytest
