@@ -5,7 +5,7 @@ from pyspark.sql.functions import *
 spark = SparkSession.builder.master("local").appName("Incrementalload").enableHiveSupport().getOrCreate()
 
 # Step 1: Set the last Cumulative_Volume value manually (this can be dynamic in your production environment)
-last_Cumulative_Volume = 36805900.826118246
+last_Cumulative_Volume = 36805902.179584436
 print("Max Cumulative_Volume: {}".format(last_Cumulative_Volume))  # Print the last Cumulative_Volume value
 
 # Step 2: Build the query to get data from PostgreSQL where Cumulative_Volume > last Cumulative_Volume
