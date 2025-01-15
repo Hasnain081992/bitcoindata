@@ -46,7 +46,8 @@ data1['Close_Increased'] = (data1['Close'].diff() > 0).astype(int)
 print(data1['Close_Increased'])
 
 #Resample data to daily frequency and calculate the mean Close price
-daily_data = data1['Close'].resample('D').mean().to_frame(name='Daily_Close_Mean')
+# 
+#daily_data = data1['Close'].resample('D').mean().to_frame(name='Daily_Close_Mean')
 
 #  Add a column for cumulative sum of Volume
 data1['Cumulative_Volume'] = data1['Volume'].cumsum()
@@ -92,7 +93,5 @@ engine = create_engine('postgresql://consultants:WelcomeItc%402022@18.132.73.146
    
     
     # Insert the DataFrame into PostgreSQL table 'coin2024'
-data1.to_sql('bitcoin_2025', engine, index=False, if_exists='replace')  # Replace 'btcusd_data' with your desired table name
-
-
+data1.to_sql('bitcoin1_2025', engine, index=False, if_exists='replace')  # Replace 'btcusd_data' with your desired table name
 
